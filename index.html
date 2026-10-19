@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Rota & Yük Asistanı - TIRNAV</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Leaflet Harita CSS -->
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <link rel="manifest" href="manifest.json">
+    <style>
+        #map { height: calc(100vh - 120px); }
+    </style>
+</head>
+<body class="bg-gray-900 text-gray-100 flex flex-col h-screen overflow-hidden">
+
+    <!-- Header -->
+    <header class="bg-slate-800 p-4 shadow-lg flex justify-between items-center border-b border-slate-700">
+        <div class="flex items-center space-x-2">
+            <span class="text-2xl">🚛</span>
+            <h1 class="text-lg font-bold tracking-wide">Rota & Yük Asistanı</h1>
+        </div>
+        <div class="flex items-center space-x-2">
+            <span id="offline-status" class="text-xs bg-emerald-500 text-gray-900 font-semibold px-2.5 py-1 rounded-full shadow">Çevrimiçi</span>
+        </div>
+    </header>
+
+    <!-- Map View -->
+    <div id="map" class="w-full relative z-0"></div>
+
+    <!-- Bottom Navigation Controls -->
+    <nav class="bg-slate-800 border-t border-slate-700 p-2 flex justify-around items-center h-[64px] shadow-2xl z-10">
+        <button onclick="filterMarkers('all')" class="flex flex-col items-center text-gray-300 hover:text-white transition">
+            <span class="text-lg">📍</span>
+            <span class="text-[11px] font-medium">Tüm Noktalar</span>
+        </button>
+        <button onclick="filterMarkers('danger')" class="flex flex-col items-center text-red-400 hover:text-red-300 transition">
+            <span class="text-lg">⚠️</span>
+            <span class="text-[11px] font-medium">Yasaklar</span>
+        </button>
+        <button onclick="filterMarkers('parking')" class="flex flex-col items-center text-emerald-400 hover:text-emerald-300 transition">
+            <span class="text-lg">🅿️</span>
+            <span class="text-[11px] font-medium">Park & Mola</span>
+        </button>
+        <button onclick="openAddModal()" class="flex flex-col items-center text-blue-400 hover:text-blue-300 transition">
+            <span class="text-lg">➕</span>
+            <span class="text-[11px] font-medium">Nokta Ekle</span>
+        </button>
+    </nav>
+
+    <!-- Add Marker Modal -->
+    <div id="addModal" class="hidden fixed inset-0 bg-black/70 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+        <div class="bg-slate-800 border border-slate-700 rounded-xl p-5 w-full max-w-md shadow-2xl">
+            <h2 class="text-lg font-bold mb-4 text-white flex items-center gap-2">
+                <span>📌</span> Yeni Nokta/Bildirim Ekle
+            </h2>
+            <form id="markerForm" onsubmit="saveNewMarker(event)" class="space-y-3">
+                <div>
+                    <label class="block text-xs font-semibold text-gray-300 mb-1">Kategori</label>
+                    <select id="type" class="w-full bg-slate-900 border border-slate-700 rounded-lg p-2.5 text-sm text-white focus:outline-none focus:ring-2 focus:ring-blue-500">
+                        <option value="danger">⚠️ Yasak / Alçak Geçit / Tonaj Sınırı</option>
+                        <option value="parking">🅿️ Güvenli TIR Parkı / Mola Yeri</option>
+                        <option value="info">ℹ️ Yol Çalışması / Çevirme / Not</option>
+                    </select>
+                </div>
+                <div>
+                    <label class="block text-xs font-semibold text-gray-300 mb-1">Başlık</label>
+                    <input type="text" id="title" required placeholder="Örn: 3.80m Alçak Alt Geçit" class="w-full bg-slate-900 border border-slate-700 rounded-lg p-2.5 text-sm text-white focus:outline-none focus:ring-2 focus:ring-blue-500">
+                </div>
+                <div>
+                    <label class="block text-xs font-semibold text-gray-300 mb-1">Açıklama / Sürücü Notu</label>
+                    <textarea id="description" rows="3" placeholder="Sürücüler için ekstra detay yazın..." class="w-full bg-slate-900 border border-slate-700 rounded-lg p-2.5 text-sm text-white focus:outline-none focus:ring-2 focus:ring-blue-500"></textarea>
+                </div>
+                <div>
+                    <label class="block text-xs font-semibold text-gray-300 mb-1">Konum Seçimi</label>
+                    <p class="text-xs text-gray-400 mb-2">Harita üzerinde tıkladığınız yer veya mevcut konumunuz kullanılır.</p>
+                    <div class="flex gap-2">
+                        <input type="text" id="coords" readonly placeholder="Haritadan tıkla veya konum al" class="w-full bg-slate-900 border border-slate-700 rounded-lg p-2 text-xs text-gray-300">
+                        <button type="button" onclick="getCurrentLocation()" class="bg-blue-600 hover:bg-blue-500 px-3 py-2 rounded-lg text-xs font-semibold whitespace-nowrap text-white">📍 Konumumu Al</button>
+                    </div>
+                </div>
+                <div class="flex justify-end gap-2 pt-2">
+                    <button type="button" onclick="closeAddModal()" class="px-4 py-2 bg-slate-700 hover:bg-slate-600 rounded-lg text-xs font-semibold text-gray-300">İptal</button>
+                    <button type="submit" class="px-4 py-2 bg-blue-600 hover:bg-blue-500 rounded-lg text-xs font-semibold text-white">Kaydet</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Leaflet JS -->
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <script src="app.js"></script>
+    <script>
+        // PWA Service Worker Registration
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', () => {
+                navigator.serviceWorker.register('./sw.js')
+                    .then(reg => console.log('Service Worker Registered'))
+                    .catch(err => console.log('SW Registration Failed: ', err));
+            });
+        }
+    </script>
+</body>
+</html>
