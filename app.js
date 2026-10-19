@@ -40,7 +40,7 @@ document.addEventListener('DOMContentLoaded', () => {
         const query = this.value.trim().toLowerCase();
         const box = document.getElementById('suggestions');
 
-        if (query.length < 2) {
+        if (query.length < 1) {
             box.classList.add('hidden');
             return;
         }
@@ -48,7 +48,7 @@ document.addEventListener('DOMContentLoaded', () => {
         const filtered = popularLocations.filter(loc => loc.name.toLowerCase().includes(query));
 
         if (filtered.length === 0) {
-            box.innerHTML = '<div class="p-2.5 text-xs text-slate-400">Öneri bulunamadı (Git tuşuna basabilirsiniz)</div>';
+            box.innerHTML = '<div class="p-2.5 text-xs text-slate-400">Eşleşen konum bulunamadı</div>';
             box.classList.remove('hidden');
             return;
         }
@@ -86,33 +86,18 @@ function selectLocation(lat, lon, displayName) {
 }
 
 function startNavigationDirect() {
-    const query = document.getElementById('destinationInput').value.trim();
+    const query = document.getElementById('destinationInput').value.trim().toLowerCase();
     if (!query) {
         alert('Lütfen bir şehir veya adres girin!');
         return;
     }
     document.getElementById('suggestions').classList.add('hidden');
 
-    const found = popularLocations.find(loc => loc.name.toLowerCase().includes(query.toLowerCase()));
+    const found = popularLocations.find(loc => loc.name.toLowerCase().includes(query));
     if (found) {
         createRoute(found.lat, found.lon, found.name);
     } else {
-        searchGlobal(query);
-    }
-}
-
-async function searchGlobal(query) {
-    const url = `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(query)}&limit=1`;
-    try {
-        const response = await fetch(url);
-        const data = await response.json();
-        if (!data || data.length === 0) {
-            alert('Konum bulunamadı.');
-            return;
-        }
-        createRoute(parseFloat(data[0].lat), parseFloat(data[0].lon), data[0].display_name);
-    } catch (e) {
-        alert('Bağlantı hatası.');
+        alert('Yazdığınız konum listede bulunamadı. Lütfen listeden seçin veya geçerli bir şehir yazın.');
     }
 }
 
