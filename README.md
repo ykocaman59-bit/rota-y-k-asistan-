@@ -1,9 +1,3 @@
-# 🌍 Küresel Sürüş & Rota Asistanı
+# 🌍 Profesyonel Küresel Sürüş Asistanı
 
-Tüm dünyadaki şehir, ilçe ve adresler arasında rota çizen, sesli asistan desteği bulunan küresel sürüş uygulaması.
-
-## 🌟 Yenilikler:
-- 🌍 **Tüm Dünya Desteği:** Dünya üzerindeki tüm ülke, şehir ve sokaklarda sorgulama yapabilir.
-- ⌨️ **Enter Tuşu Desteği:** Klavyeden Enter'a basıldığında otomatik rota oluşturur.
-- 🗣️ **Sesli Uyarı:** *"İyi yolculuklar dileriz"* ve *"Yolculuğunuz sona ermiştir"* anonsları.
-- ⏱️ **Saat & Dakika:** Uzun mesafeli rotalarda süreyi otomatik olarak saat ve dakika cinsinden hesaplar.
+Yandex / Google Maps tarzı anlık adres öneri listesine sahip, dünya genelinde çalışan profesyonel rota ve sürüş asistanı.
