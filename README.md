@@ -1,8 +1,9 @@
-# 🚛 Profesyonel Rota & Sürüş Asistanı
+# 🌍 Küresel Sürüş & Rota Asistanı
 
-Yandex / Google Maps mantığında çalışan, adres aramalı, rota çizen, sesli asistan özellikli profesyonel sürüş ve nakliye asistanı.
+Tüm dünyadaki şehir, ilçe ve adresler arasında rota çizen, sesli asistan desteği bulunan küresel sürüş uygulaması.
 
-## 🌟 Özellikler
-- 🔍 **Adres Arama & Rota Çizme:** İstediğin adresi yazıp anında rota oluşturma.
-- 🗣️ **Sesli Asistan:** Yolculuk başladığında *"İyi yolculuklar dileriz"*, bittiğinde *"Yolculuğunuz sona ermiştir"* sesli anonsu.
-- 📏 **Mesafe ve Süre Hesabı:** Toplam kilometre ve tahmini varış süresi gösterimi.
+## 🌟 Yenilikler:
+- 🌍 **Tüm Dünya Desteği:** Dünya üzerindeki tüm ülke, şehir ve sokaklarda sorgulama yapabilir.
+- ⌨️ **Enter Tuşu Desteği:** Klavyeden Enter'a basıldığında otomatik rota oluşturur.
+- 🗣️ **Sesli Uyarı:** *"İyi yolculuklar dileriz"* ve *"Yolculuğunuz sona ermiştir"* anonsları.
+- ⏱️ **Saat & Dakika:** Uzun mesafeli rotalarda süreyi otomatik olarak saat ve dakika cinsinden hesaplar.

@@ -2,8 +2,8 @@
 <html lang="tr">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Profesyonel Rota & Sürüş Asistanı</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Küresel Rota & Sürüş Asistanı</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <!-- Leaflet CSS -->
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
@@ -11,37 +11,52 @@
     <link rel="stylesheet" href="https://unpkg.com/leaflet-routing-machine@latest/dist/leaflet-routing-machine.css" />
     <link rel="manifest" href="manifest.json">
     <style>
-        #map { height: calc(100vh - 140px); }
-        .leaflet-routing-container { background: #1e293b !important; color: white !important; padding: 10px; border-radius: 8px; font-size: 12px; }
+        #map { height: calc(100vh - 130px); width: 100%; }
+        .leaflet-routing-container { 
+            background: #0f172a !important; 
+            color: #f8fafc !important; 
+            padding: 8px; 
+            border-radius: 8px; 
+            font-size: 11px;
+            max-height: 180px;
+            overflow-y: auto;
+            border: 1px solid #334155;
+        }
+        .leaflet-routing-alt {
+            background: transparent !important;
+            color: #f8fafc !important;
+        }
     </style>
 </head>
-<body class="bg-gray-900 text-gray-100 flex flex-col h-screen overflow-hidden">
+<body class="bg-slate-900 text-slate-100 flex flex-col h-screen overflow-hidden font-sans">
 
-    <!-- Üst Kontrol Paneli & Arama -->
-    <header class="bg-slate-800 p-3 shadow-lg flex flex-col gap-2 border-b border-slate-700 z-20">
+    <!-- Üst Arama ve Kontrol Paneli -->
+    <header class="bg-slate-800 p-2.5 shadow-xl flex flex-col gap-2 border-b border-slate-700 z-20">
         <div class="flex justify-between items-center">
-            <h1 class="text-base font-bold flex items-center gap-2"><span>🚛</span> Sürüş & Rota Asistanı</h1>
-            <span id="offline-status" class="text-xs bg-emerald-500 text-gray-900 font-semibold px-2 py-0.5 rounded-full">Aktif</span>
+            <h1 class="text-sm font-bold flex items-center gap-1.5 text-blue-400">
+                <span>🌍</span> Küresel Sürüş Asistanı
+            </h1>
+            <span id="offline-status" class="text-[10px] bg-emerald-500 text-slate-950 font-bold px-2 py-0.5 rounded-full">Aktif</span>
         </div>
-        <!-- Rota Arama / Hedef Belirleme -->
+        <!-- Rota Arama Input -->
         <div class="flex gap-2">
-            <input type="text" id="destinationInput" placeholder="Nereye gitmek istiyorsunuz? (Örn: Kadıköy, İstanbul)" class="w-full bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-xs text-white focus:outline-none focus:ring-2 focus:ring-blue-500">
-            <button onclick="startNavigation()" class="bg-blue-600 hover:bg-blue-500 px-4 py-2 rounded-lg text-xs font-bold text-white whitespace-nowrap">Yol Tarifi Al</button>
+            <input type="text" id="destinationInput" placeholder="Dünya genelinde şehir/adres girin (Örn: Berlin, Kadıköy...)" class="w-full bg-slate-950 border border-slate-700 rounded-lg px-3 py-2 text-xs text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500">
+            <button onclick="startNavigation()" class="bg-blue-600 hover:bg-blue-500 px-3.5 py-2 rounded-lg text-xs font-bold text-white whitespace-nowrap transition active:scale-95">Yol Tarifi Al</button>
         </div>
     </header>
 
     <!-- Harita Alanı -->
     <div id="map" class="w-full relative z-0"></div>
 
-    <!-- Alt Bilgi ve Navigasyon -->
-    <nav class="bg-slate-800 border-t border-slate-700 p-3 flex justify-between items-center h-[60px] shadow-2xl z-10">
-        <div id="routeInfo" class="text-xs text-gray-300">
+    <!-- Alt Bilgi / Sürüş Durumu -->
+    <nav class="bg-slate-800 border-t border-slate-700 p-3 flex justify-between items-center h-[55px] shadow-2xl z-10">
+        <div id="routeInfo" class="text-xs text-slate-300 font-medium truncate max-w-[70%]">
             <span>Hedef girilmedi. Rota bekleniyor...</span>
         </div>
-        <button onclick="stopNavigation()" class="bg-red-600 hover:bg-red-500 px-3 py-1.5 rounded-lg text-xs font-bold text-white hidden" id="endTripBtn">Sürüşü Bitir</button>
+        <button onclick="stopNavigation()" class="bg-red-600 hover:bg-red-500 px-3 py-1.5 rounded-lg text-xs font-bold text-white hidden whitespace-nowrap transition active:scale-95" id="endTripBtn">Sürüşü Bitir</button>
     </nav>
 
-    <!-- Leaflet JS ve Routing Machine -->
+    <!-- JS Kütüphaneleri -->
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
     <script src="https://unpkg.com/leaflet-routing-machine@latest/dist/leaflet-routing-machine.js"></script>
     <script src="app.js"></script>
