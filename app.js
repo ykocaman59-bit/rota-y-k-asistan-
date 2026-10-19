@@ -1,148 +1,99 @@
-// Default map center (Istanbul coordinates)
-const defaultLat = 40.98, defaultLng = 29.15;
-let map, currentMarkers = [], tempCoords = null;
+let map, routingControl = null;
+let currentPosition = [40.98, 29.15]; // Varsayılan Başlangıç (İstanbul)
 
-// Initial predefined markers (sample truck routes and restrictions)
-const initialData = [
-    { id: 1, type: 'danger', title: 'Alçak Alt Geçit (3.80m)', description: 'Yüksek dorse araçlar dikkat! Alternatif yan yolu kullanın.', lat: 40.982, lng: 29.145 },
-    { id: 2, type: 'parking', title: 'Güvenli Kamyon/TIR Parkı', description: '7/24 Güvenlik, Duş, Mescit ve Restoran mevcut.', lat: 40.975, lng: 29.160 },
-    { id: 3, type: 'info', title: 'Şehir İçi Tonaj Yasağı Saatleri', description: '06:00 - 10:00 ve 16:00 - 20:00 saatleri arası ağır vasıta girişi yasaktır.', lat: 40.990, lng: 29.130 }
-];
-
-// Load markers from LocalStorage or use defaults
-function getStoredMarkers() {
-    const data = localStorage.getItem('rota_markers');
-    return data ? JSON.parse(data) : initialData;
-}
-
-function saveStoredMarkers(markers) {
-    localStorage.setItem('rota_markers', JSON.stringify(markers));
-}
-
-// Initialize Leaflet Map
 document.addEventListener('DOMContentLoaded', () => {
-    map = L.map('map').setView([defaultLat, defaultLng], 12);
+    map = L.map('map').setView(currentPosition, 13);
 
-    // OpenStreetMap Tile Layer
     L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
         maxZoom: 19,
-        attribution: '© OpenStreetMap contributors'
+        attribution: '© OpenStreetMap'
     }).addTo(map);
 
-    // Render Markers
-    loadMarkersOnMap('all');
-
-    // Click on map to pick coordinates for modal
-    map.on('click', (e) => {
-        tempCoords = e.latlng;
-        document.getElementById('coords').value = `${e.latlng.lat.toFixed(5)}, ${e.latlng.lng.toFixed(5)}`;
-    });
-
-    // Check Online/Offline status
-    updateOnlineStatus();
-    window.addEventListener('online', updateOnlineStatus);
-    window.addEventListener('offline', updateOnlineStatus);
-});
-
-function updateOnlineStatus() {
-    const statusEl = document.getElementById('offline-status');
-    if (navigator.onLine) {
-        statusEl.textContent = 'Çevrimiçi';
-        statusEl.className = 'text-xs bg-emerald-500 text-gray-900 font-semibold px-2.5 py-1 rounded-full shadow';
-    } else {
-        statusEl.textContent = 'Çevrimdışı (Çevrimdışı Mod)';
-        statusEl.className = 'text-xs bg-amber-500 text-gray-900 font-semibold px-2.5 py-1 rounded-full shadow';
-    }
-}
-
-// Render markers to map with custom icons/colors
-function loadMarkersOnMap(filterType = 'all') {
-    // Clear existing layer markers
-    currentMarkers.forEach(m => map.removeLayer(m));
-    currentMarkers = [];
-
-    const markers = getStoredMarkers();
-
-    markers.forEach(item => {
-        if (filterType !== 'all' && item.type !== filterType) return;
-
-        let badgeColor = item.type === 'danger' ? '#ef4444' : (item.type === 'parking' ? '#10b981' : '#3b82f6');
-        let iconSymbol = item.type === 'danger' ? '⚠️' : (item.type === 'parking' ? '🅿️' : 'ℹ️');
-
-        const customIcon = L.divIcon({
-            className: 'custom-div-icon',
-            html: `<div style="background-color: ${badgeColor}; color: white; width: 32px; height: 32px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 16px; border: 2px solid white; box-shadow: 0 4px 6px rgba(0,0,0,0.3);">${iconSymbol}</div>`,
-            iconSize: [32, 32],
-            iconAnchor: [16, 16]
-        });
-
-        const marker = L.marker([item.lat, item.lng], { icon: customIcon }).addTo(map);
-        marker.bindPopup(`
-            <div style="font-family: sans-serif; color: #1e293b; max-width: 200px;">
-                <h3 style="font-weight: bold; margin-bottom: 4px; font-size: 14px;">${item.title}</h3>
-                <p style="font-size: 12px; margin: 0; color: #475569;">${item.description}</p>
-                <div style="margin-top: 8px; font-size: 10px; color: #94a3b8;">Sürücü Bildirimi</div>
-            </div>
-        `);
-
-        currentMarkers.push(marker);
-    });
-}
-
-function filterMarkers(type) {
-    loadMarkersOnMap(type);
-}
-
-function openAddModal() {
-    document.getElementById('addModal').classList.remove('hidden');
-}
-
-function closeAddModal() {
-    document.getElementById('addModal').classList.add('hidden');
-}
-
-function getCurrentLocation() {
+    // Kullanıcının gerçek konumunu al
     if (navigator.geolocation) {
         navigator.geolocation.getCurrentPosition(position => {
-            const { latitude, longitude } = position.coords;
-            tempCoords = { lat: latitude, lng: longitude };
-            document.getElementById('coords').value = `${latitude.toFixed(5)}, ${longitude.toFixed(5)}`;
-            map.setView([latitude, longitude], 14);
-        }, () => {
-            alert('Konum erişimi alınamadı.');
+            currentPosition = [position.coords.latitude, position.coords.longitude];
+            map.setView(currentPosition, 14);
+            L.marker(currentPosition).addTo(map).bindPopup("Buradasınız").openPopup();
         });
-    } else {
-        alert('Cihazınız konum özelliğini desteklemiyor.');
+    }
+});
+
+// Sesli Asistan Fonksiyonu
+function speak(text) {
+    if ('speechSynthesis' in window) {
+        window.speechSynthesis.cancel();
+        const utterance = new SpeechSynthesisUtterance(text);
+        utterance.lang = 'tr-TR';
+        utterance.rate = 1.0;
+        window.speechSynthesis.speak(utterance);
     }
 }
 
-function saveNewMarker(e) {
-    e.preventDefault();
-    if (!tempCoords) {
-        alert('Lütfen harita üzerinden bir noktaya tıklayın veya "Konumumu Al" butonuna basın.');
+// Hedef Adresi Koordinata Çevir ve Rota Çiz
+async function startNavigation() {
+    const destinationQuery = document.getElementById('destinationInput').value;
+    if (!destinationQuery) {
+        alert('Lütfen bir hedef girin!');
         return;
     }
 
-    const title = document.getElementById('title').value;
-    const description = document.getElementById('description').value;
-    const type = document.getElementById('type').value;
+    const url = `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(destinationQuery)}`;
+    
+    try {
+        const response = await fetch(url);
+        const data = await response.json();
 
-    const markers = getStoredMarkers();
-    const newMarker = {
-        id: Date.now(),
-        type,
-        title,
-        description,
-        lat: tempCoords.lat,
-        lng: tempCoords.lng
-    };
+        if (data.length === 0) {
+            alert('Aradığınız konum bulunamadı. Lütfen daha detaylı yazın.');
+            return;
+        }
 
-    markers.push(newMarker);
-    saveStoredMarkers(markers);
-    loadMarkersOnMap('all');
+        const destLat = parseFloat(data[0].lat);
+        const destLng = parseFloat(data[0].lon);
 
-    // Reset form & close modal
-    document.getElementById('markerForm').reset();
-    tempCoords = null;
-    closeAddModal();
+        if (routingControl) {
+            map.removeControl(routingControl);
+        }
+
+        // Rota Oluşturucu
+        routingControl = L.Routing.control({
+            waypoints: [
+                L.latLng(currentPosition[0], currentPosition[1]),
+                L.latLng(destLat, destLng)
+            ],
+            routeWhileDragging: false,
+            language: 'tr',
+            createMarker: function(i, wp, n) {
+                return L.marker(wp.latLng).bindPopup(i === 0 ? "Başlangıç" : "Hedef");
+            }
+        }).addTo(map);
+
+        // Sesli Karşılama ve Arayüz Güncellemesi
+        speak("İyi yolculuklar dileriz.");
+        document.getElementById('routeInfo').innerHTML = `<span class="text-emerald-400 font-bold">Rota:</span> ${data[0].display_name.substring(0, 35)}...`;
+        document.getElementById('endTripBtn').classList.remove('hidden');
+
+        routingControl.on('routesfound', function(e) {
+            const summary = e.routes[0].summary;
+            const km = (summary.totalDistance / 1000).toFixed(1);
+            const dakika = Math.round(summary.totalTime / 60);
+            document.getElementById('routeInfo').innerHTML = `Mesafe: <b>${km} km</b> | Süre: <b>${dakika} dk</b>`;
+        });
+
+    } catch (error) {
+        console.error(error);
+        alert('Rota oluşturulurken bir hata oluştu.');
+    }
+}
+
+function stopNavigation() {
+    if (routingControl) {
+        map.removeControl(routingControl);
+        routingControl = null;
+    }
+    speak("Yolculuğunuz sona ermiştir.");
+    document.getElementById('routeInfo').innerHTML = '<span>Yolculuk sonlandırıldı. Yeni hedef seçin.</span>';
+    document.getElementById('endTripBtn').classList.add('hidden');
+    document.getElementById('destinationInput').value = '';
 }

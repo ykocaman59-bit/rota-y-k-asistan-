@@ -1,4 +1,4 @@
-const CACHE_NAME = 'rota-yuk-asistani-v1';
+const CACHE_NAME = 'rota-yuk-asistani-v2';
 const ASSETS_TO_CACHE = [
     './',
     './index.html',
@@ -6,10 +6,11 @@ const ASSETS_TO_CACHE = [
     './manifest.json',
     'https://cdn.tailwindcss.com',
     'https://unpkg.com/leaflet@1.9.4/dist/leaflet.css',
-    'https://unpkg.com/leaflet@1.9.4/dist/leaflet.js'
+    'https://unpkg.com/leaflet@1.9.4/dist/leaflet.js',
+    'https://unpkg.com/leaflet-routing-machine@latest/dist/leaflet-routing-machine.css',
+    'https://unpkg.com/leaflet-routing-machine@latest/dist/leaflet-routing-machine.js'
 ];
 
-// Install Service Worker
 self.addEventListener('install', (event) => {
     event.waitUntil(
         caches.open(CACHE_NAME).then((cache) => {
@@ -18,7 +19,6 @@ self.addEventListener('install', (event) => {
     );
 });
 
-// Activate Service Worker
 self.addEventListener('activate', (event) => {
     event.waitUntil(
         caches.keys().then((keys) => {
@@ -33,7 +33,6 @@ self.addEventListener('activate', (event) => {
     );
 });
 
-// Fetch Assets from Cache first, then Network
 self.addEventListener('fetch', (event) => {
     event.respondWith(
         caches.match(event.request).then((cachedResponse) => {
@@ -41,7 +40,6 @@ self.addEventListener('fetch', (event) => {
                 return cachedResponse;
             }
             return fetch(event.request).catch(() => {
-                // Return cached index.html if offline
                 if (event.request.mode === 'navigate') {
                     return caches.match('./index.html');
                 }
