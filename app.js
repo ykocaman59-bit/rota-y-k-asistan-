@@ -1,18 +1,28 @@
 let map, routingControl = null;
-let currentPosition = [40.98, 29.15]; // Varsayılan Konum (İstanbul)
-let searchTimeout = null;
+let currentPosition = [40.98, 29.15];
+
+const popularLocations = [
+    { name: "Eskişehir, Merkez", lat: 39.7767, lon: 30.5206 },
+    { name: "Ankara, Kızılay", lat: 39.9208, lon: 32.8541 },
+    { name: "İstanbul, Kadıköy", lat: 40.9901, lon: 29.0294 },
+    { name: "İstanbul, Sultanbeyli", lat: 40.9667, lon: 29.2667 },
+    { name: "Bursa, Osmangazi", lat: 40.1828, lon: 29.0665 },
+    { name: "İzmir, Konak", lat: 38.4192, lon: 27.1287 },
+    { name: "Antalya, Muratpaşa", lat: 36.8841, lon: 30.7056 },
+    { name: "Kocaeli, İzmit", lat: 40.7654, lon: 29.9408 },
+    { name: "Sakarya, Adapazarı", lat: 40.7736, lon: 30.4025 },
+    { name: "Berlin, Almanya", lat: 52.5200, lon: 13.4050 },
+    { name: "Londra, İngiltere", lat: 51.5074, lon: -0.1278 }
+];
 
 document.addEventListener('DOMContentLoaded', () => {
-    // Harita İlklendirme
     map = L.map('map', { zoomControl: true }).setView(currentPosition, 12);
 
-    // OpenStreetMap Küresel Katmanı
     L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
         maxZoom: 19,
         attribution: '© OpenStreetMap'
     }).addTo(map);
 
-    // Kullanıcı Konumunu Al
     if (navigator.geolocation) {
         navigator.geolocation.getCurrentPosition(
             position => {
@@ -20,39 +30,45 @@ document.addEventListener('DOMContentLoaded', () => {
                 map.setView(currentPosition, 13);
                 L.marker(currentPosition).addTo(map).bindPopup("<b>Mevcut Konumunuz</b>").openPopup();
             },
-            error => {
-                console.log("Konum alınamadı, varsayılan konum kullanılıyor.");
-            },
+            error => { console.log("Konum alınamadı."); },
             { enableHighAccuracy: true, timeout: 10000 }
         );
     }
 
-    // Yandex Tarzı Anlık Arama Dinleyicisi (Autocomplete)
     const inputField = document.getElementById('destinationInput');
     inputField.addEventListener('input', function() {
-        const query = this.value.trim();
-        clearTimeout(searchTimeout);
+        const query = this.value.trim().toLowerCase();
+        const box = document.getElementById('suggestions');
 
-        if (query.length < 3) {
-            hideSuggestions();
+        if (query.length < 2) {
+            box.classList.add('hidden');
             return;
         }
 
-        // 300ms gecikme ile sunucuya yük binmesini önle
-        searchTimeout = setTimeout(() => {
-            fetchSuggestions(query);
-        }, 300);
+        const filtered = popularLocations.filter(loc => loc.name.toLowerCase().includes(query));
+
+        if (filtered.length === 0) {
+            box.innerHTML = '<div class="p-2.5 text-xs text-slate-400">Öneri bulunamadı (Git tuşuna basabilirsiniz)</div>';
+            box.classList.remove('hidden');
+            return;
+        }
+
+        let html = '';
+        filtered.forEach(item => {
+            html += `<div onclick="selectLocation(${item.lat}, ${item.lon}, '${item.name}')" class="p-2.5 text-xs text-slate-200 hover:bg-slate-800 cursor-pointer transition truncate">${item.name}</div>`;
+        });
+
+        box.innerHTML = html;
+        box.classList.remove('hidden');
     });
 
-    // Dışarı tıklandığında önerileri kapat
     document.addEventListener('click', function(e) {
         if (!e.target.closest('#destinationInput') && !e.target.closest('#suggestions')) {
-            hideSuggestions();
+            document.getElementById('suggestions').classList.add('hidden');
         }
     });
 });
 
-// Sesli Asistan
 function speak(text) {
     if ('speechSynthesis' in window) {
         window.speechSynthesis.cancel();
@@ -63,80 +79,43 @@ function speak(text) {
     }
 }
 
-// Anlık Önerileri Getir (Autocomplete)
-async function fetchSuggestions(query) {
-    const url = `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(query)}&limit=5&addressdetails=1`;
-    
-    try {
-        const response = await fetch(url, {
-            headers: { 'User-Agent': 'GlobalTruckNav/3.0' }
-        });
-        const data = await response.json();
-
-        const box = document.getElementById('suggestions');
-        if (!data || data.length === 0) {
-            box.innerHTML = '<div class="p-2.5 text-xs text-slate-400">Sonuç bulunamadı</div>';
-            box.classList.remove('hidden');
-            return;
-        }
-
-        let html = '';
-        data.forEach(item => {
-            html += `<div onclick="selectLocation(${item.lat}, ${item.lon}, '${item.display_name.replace(/'/g, "")}')" class="p-2.5 text-xs text-slate-200 hover:bg-slate-800 cursor-pointer transition truncate">${item.display_name}</div>`;
-        });
-
-        box.innerHTML = html;
-        box.classList.remove('hidden');
-    } catch (e) {
-        console.log("Öneri alınamadı:", e);
-    }
-}
-
-function hideSuggestions() {
-    document.getElementById('suggestions').classList.add('hidden');
-}
-
-// Listeden bir adres seçildiğinde
 function selectLocation(lat, lon, displayName) {
     document.getElementById('destinationInput').value = displayName;
-    hideSuggestions();
-    createRoute(parseFloat(lat), parseFloat(lon), displayName);
+    document.getElementById('suggestions').classList.add('hidden');
+    createRoute(lat, lon, displayName);
 }
 
-// Doğrudan "Git" butonuna basıldığında
 function startNavigationDirect() {
     const query = document.getElementById('destinationInput').value.trim();
     if (!query) {
-        alert('Lütfen bir adres veya şehir girin!');
+        alert('Lütfen bir şehir veya adres girin!');
         return;
     }
-    hideSuggestions();
-    searchAndRoute(query);
-}
+    document.getElementById('suggestions').classList.add('hidden');
 
-// Metin ile arayıp rota çiz
-async function searchAndRoute(query) {
-    const url = `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(query)}&limit=1`;
-
-    try {
-        const response = await fetch(url, {
-            headers: { 'User-Agent': 'GlobalTruckNav/3.0' }
-        });
-        const data = await response.json();
-
-        if (!data || data.length === 0) {
-            alert('Aradığınız konum bulunamadı.');
-            return;
-        }
-
-        createRoute(parseFloat(data[0].lat), parseFloat(data[0].lon), data[0].display_name);
-    } catch (error) {
-        console.error(error);
-        alert('Bağlantı hatası oluştu. Lütfen internetinizi kontrol edin.');
+    const found = popularLocations.find(loc => loc.name.toLowerCase().includes(query.toLowerCase()));
+    if (found) {
+        createRoute(found.lat, found.lon, found.name);
+    } else {
+        searchGlobal(query);
     }
 }
 
-// Ortak Rota Oluşturucu
+async function searchGlobal(query) {
+    const url = `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(query)}&limit=1`;
+    try {
+        const response = await fetch(url);
+        const data = await response.json();
+        if (!data || data.length === 0) {
+            alert('Konum bulunamadı.');
+            return;
+        }
+        createRoute(parseFloat(data[0].lat), parseFloat(data[0].lon), data[0].display_name);
+    } catch (e) {
+        alert('Bağlantı hatası.');
+    }
+}
+
 function createRoute(destLat, destLng, displayName) {
     if (routingControl) {
         map.removeControl(routingControl);
@@ -172,10 +151,6 @@ function createRoute(destLat, destLng, displayName) {
 
         let sureMetni = saat > 0 ? `${saat} sa ${kalanDakika} dk` : `${dakika} dk`;
         document.getElementById('routeInfo').innerHTML = `Mesafe: <b class="text-emerald-400">${km} km</b> | Süre: <b class="text-blue-400">${sureMetni}</b>`;
-    });
-
-    routingControl.on('routingerror', function(e) {
-        alert('Bu iki konum arasında karayolu rotası bulunamadı.');
     });
 }
 

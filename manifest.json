@@ -1,13 +1,7 @@
 {
-  "short_name": "TIRNavGlobal",
-  "name": "Profesyonel Küresel Sürüş Asistanı",
-  "icons": [
-    {
-      "src": "https://cdn-icons-png.flaticon.com/512/2554/2554978.png",
-      "type": "image/png",
-      "sizes": "512x512"
-    }
-  ],
+  "short_name": "NavAsistan",
+  "name": "Sürüş & Rota Asistanı",
+  "icons": [{"src": "https://cdn-icons-png.flaticon.com/512/2554/2554978.png", "type": "image/png", "sizes": "512x512"}],
   "start_url": "./index.html",
   "background_color": "#0f172a",
   "theme_color": "#0f172a",
